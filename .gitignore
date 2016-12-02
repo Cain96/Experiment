@@ -1,0 +1,17 @@
+simulation/
+incremental_db/
+db/
+*.dat
+*.dbs
+work/
+*.mpf
+*.mti
+*.rpt
+*.summary
+*.sof
+*.qpf
+*.done
+*.pin
+*.pof
+*.qsf
+*.wlf

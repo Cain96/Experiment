@@ -29,9 +29,8 @@ architecture rtl of rx is
   type state_type is (s0, s1, s2, s3);
   signal state: state_type;
   signal output: std_logic;
-  signal count_clk: std_logic_vector(9 downto 0);
-  signal count_clk_half: std_logic_vector(9 downto 0);
-  signal count_clk2: std_logic_vector(9 downto 0);
+  signal flag: std_logic;
+  signal count_clk, count_clk2, count_clk_half: std_logic_vector(9 downto 0);
   signal number_a, number_b, number_c, number_d, number_e, number_f, number_g, number_h: std_logic_vector(3 downto 0); 
   -- 送信用クロック生成回路
   component clock_gen
@@ -62,6 +61,8 @@ begin
   xrst <= sysrst;
   start <= gio0;
   din <= gio4 & gio3 & gio2 & gio1;
+  led0 <= gio1;
+  gio5 <= output;
 	
   ssd1: seven_seg_decoder port map(din => number_a, dout => seg_a);
   ssd2: seven_seg_decoder port map(din => number_b, dout => seg_b);
@@ -77,7 +78,6 @@ begin
 -- 記述開始
   process(clk, xrst, start, din)
     begin
-    gio5 <= output;
 	 
     if(xrst = '0') then
 		state <= s0;
@@ -86,51 +86,66 @@ begin
 			when s0 =>
 			   output <= '1';
 				if(start = '1') then
-					output <= '0';
 					state <= s1;
+					count_clk <= "0000000000";
 				end if;
 				
 			when s1 =>
+				led1 <= '1';
+				output <= '0';
 				count_clk <= count_clk + 1;
 				if(start = '0') then
 					count_clk_half <= SHR(count_clk,"0000000001");
 					count_clk2 <= "0000000000";
 					wadr <= "000";
 					radr <= "000";
+					flag <= '0';
 					state <= s2;
 				end if;
 				
 			when s2 =>
+				led2 <= '1';
 				count_clk2 <= count_clk2 + 1;
 				if(count_clk2 = count_clk_half) then
 					we <= '1';
+					flag <= '1';
+				elsif(count_clk2 = count_clk - 1) then
 					wadr <= wadr + 1;
-				elsif(count_clk2 = count_clk) then
-					we <= '0';
 					count_clk2 <= "0000000000";
-					if(wadr = "000") then
+					if(wadr = "111") then
+						radr <= "000";
 						state <= s3;
 					end if;
+				elsif(flag = '1') then
+					we <= '0';
+					flag <= '0';
 				end if;
 				
-				when s3 =>
+			when s3 =>
+				led3 <= '1';
+				radr <= radr + 1;
+				if(radr = "000") then
 					number_a <= dout;
-					radr <= radr + 1;
+				elsif(radr = "001") then
 					number_b <= dout;
-					radr <= radr + 1;
+				elsif(radr = "010") then
 					number_c <= dout;
-					radr <= radr + 1;
+				elsif(radr = "011") then
 					number_d <= dout;
-					radr <= radr + 1;
+				elsif(radr = "100") then
 					number_e <= dout;
-					radr <= radr + 1;
+				elsif(radr = "101") then
 					number_f <= dout;
-					radr <= radr + 1;
+				elsif(radr = "110") then
 					number_g <= dout;
-					radr <= radr + 1;
+				elsif(radr = "111") then
 					number_h <= dout;
-					output <= '1';
 					state <= s0;
+					led1 <= '0';
+					led2 <= '0';
+					led3 <= '0';
+				end if;
+				
 			when others =>
 				state <= state;
 		end case;

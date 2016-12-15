@@ -32,6 +32,7 @@ architecture rtl of tx is
   signal number_a, number_b, number_c, number_d, number_e, number_f, number_g, number_h : std_logic_vector (3 downto 0);
   signal wadr, radr ,counter: std_logic_vector (2 downto 0);
   signal din, dout: std_logic_vector (3 downto 0);
+  signal button: std_logic;
   -- 送信用クロック生成回路
   component clock_gen
     generic(N: integer);
@@ -63,6 +64,8 @@ begin
   din <= dip_b(3 downto 0);
   we <= dip_b(7);
   ready <= gio5;
+  button <= psw_a0;
+  led0 <= gio5; 
 
   ssd1: seven_seg_decoder port map(din => number_a, dout => seg_a);
   ssd2: seven_seg_decoder port map(din => number_b, dout => seg_b);
@@ -87,54 +90,66 @@ process(clk,xrst,counter,radr,ready,enable)
 			if(we = '1') then
 				radr <= wadr;
 				if(radr = "000") then
-					number_a <= din;
+					number_a <= dout;
 				elsif(radr = "001") then
-					number_b <= din;
+					number_b <= dout;
 				elsif(radr = "010") then
-					number_c <= din;
+					number_c <= dout;
 				elsif(radr = "011") then
-					number_d <= din;
+					number_d <= dout;
 				elsif(radr = "100") then
-					number_e <= din;
+					number_e <= dout;
 				elsif(radr = "101") then
-					number_f <= din;
+					number_f <= dout;
 				elsif(radr = "110") then
-					number_g <= din;
+					number_g <= dout;
 				elsif(radr = "111") then
-					number_h <= din;
+					number_h <= dout;
 				end if;
+				enable <= '1';
 			end if;
 			
-			if(enable = '0' and ready = '1') then
+			if(button = '0' and enable = '1' and ready = '1') then
 				state <= s1;
 			end if;
 			
 		when s1 =>
+			led1 <= '1';
 			if(clk_tx = '1') then
 				gio0 <= '1';
 				state <= s2;
 			end if;
 			
 		when s2 =>
+			led2 <= '1';
 			if(clk_tx = '1') then
 				gio0 <= '0';
 				state <= s3;
+				radr <= "000";
 			end if;
 			
 		when s3 =>
+			led3 <= '1';
 			gio1 <= dout(0);
 			gio2 <= dout(1);
 			gio3 <= dout(2);
 			gio4 <= dout(3);
-			if(radr < "111") then
-				radr <= radr + '1';
-			else
-				radr <= "000";
-			end if;
-			counter <= counter + '1';
-			if(counter = "111") then
-				counter <= "000";
-				state <= s0;
+			if(clk_tx = '1') then
+				if(radr < "111") then
+					radr <= radr + 1;
+				elsif(radr = "111") then
+					radr <= radr + 1;
+				else
+					radr <= "000";
+				end if;
+				counter <= counter + 1;
+				if(counter = "111") then
+					counter <= "000";
+					led1 <= '0';
+					led2 <= '0';
+					led3 <= '0';
+					state <= s0;
+				end if;
 			end if;	
 		
 		when others =>

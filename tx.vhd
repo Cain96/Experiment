@@ -159,4 +159,3 @@ process(clk,xrst,counter,radr,ready,enable)
 end process;
 
 end rtl;
-

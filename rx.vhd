@@ -162,4 +162,3 @@ begin
   end process;
 -- ‹LqI—¹
 end rtl;
-

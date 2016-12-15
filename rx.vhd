@@ -24,7 +24,7 @@ architecture rtl of rx is
   signal ready: std_logic;
   signal cnt1: std_logic_vector (31 downto 0);
   signal we: std_logic;
-  signal wadr, radr: std_logic_vector (2 downto 0);
+  signal wadr, radr, radr2: std_logic_vector (2 downto 0);
   signal din, dout: std_logic_vector (3 downto 0);
   type state_type is (s0, s1, s2, s3);
   signal state: state_type;
@@ -81,6 +81,14 @@ begin
 	 
     if(xrst = '0') then
 		state <= s0;
+		number_a <= "0000";
+		number_b <= "0000";
+		number_c <= "0000";
+		number_d <= "0000";
+		number_e <= "0000";
+		number_f <= "0000";
+		number_g <= "0000";
+		number_h <= "0000";
     elsif(clk'event and clk = '1') then
 		case state is 
 			when s0 =>
@@ -124,21 +132,22 @@ begin
 			when s3 =>
 				led3 <= '1';
 				radr <= radr + 1;
-				if(radr = "000") then
+				radr2 <= radr;
+				if(radr2 = "000") then
 					number_a <= dout;
-				elsif(radr = "001") then
+				elsif(radr2 = "001") then
 					number_b <= dout;
-				elsif(radr = "010") then
+				elsif(radr2 = "010") then
 					number_c <= dout;
-				elsif(radr = "011") then
+				elsif(radr2 = "011") then
 					number_d <= dout;
-				elsif(radr = "100") then
+				elsif(radr2 = "100") then
 					number_e <= dout;
-				elsif(radr = "101") then
+				elsif(radr2 = "101") then
 					number_f <= dout;
-				elsif(radr = "110") then
+				elsif(radr2 = "110") then
 					number_g <= dout;
-				elsif(radr = "111") then
+				elsif(radr2 = "111") then
 					number_h <= dout;
 					state <= s0;
 					led1 <= '0';
